@@ -92,4 +92,35 @@ const updateProduct = async (req: Request, res: Response): Promise<any> => {
     }
 }
 
-export { getAllProducts, addNewProduct, deleteProduct, updateProduct }
+const getNameProduct = async (req: Request, res: Response): Promise<any> => {
+    try {
+        const { search } = req.query;
+
+        if (!search || typeof search !== "string") {
+            return res.status(400).json({
+                success: false,
+                message: "El parámetro 'search' es obligatorio y debe ser string."
+            });
+        }
+
+        const products = await Product.find({
+            name: { $regex: search, $options: "i" }
+        });
+
+        res.status(200).json({
+            success: true,
+            message: `Productos que coinciden con '${search}'`,
+            data: products
+        });
+
+    } catch (error) {
+        const err = error as Error;
+        res.status(500).json({
+            success: false,
+            message: err.message
+        });
+    }
+};
+
+
+export { getAllProducts, addNewProduct, deleteProduct, updateProduct, getNameProduct }

@@ -1,11 +1,15 @@
 
 import { useEffect, useState } from "react"
 import { Layout } from "../components/Layout"
-import { getProducts, deleteProduct } from "../services/products"
+import { getProducts, deleteProduct, BASE_API } from "../services/products"
 import { useAuth } from "../context/AuthContext"
 
 const Home = () => {
+
+    console.log(import.meta.env.VITE_API_URL);
     const [products, setProducts] = useState([])
+    const [searchTerm, setSearchTerm] = useState("")
+    const [searchResults, setSearchResults] = useState([])
 
     const { user } = useAuth()
 
@@ -30,6 +34,27 @@ const Home = () => {
         }
     }
 
+    const handleSearch = async () => {
+        if (searchTerm.trim() === "") {
+            setSearchResults([])
+            return
+        }
+
+        try {
+            const response = await fetch(`${BASE_API}/products/search?search=${encodeURIComponent(searchTerm)}`)
+            const json = await response.json()
+
+            if (response.ok) {
+                setSearchResults(json.data)
+            } else {
+                setSearchResults([])
+            }
+        } catch (error) {
+            console.error("Error al buscar productos:", error)
+            setSearchResults([])
+        }
+    }
+
     useEffect(() => {
         fetchProducts()
     }, [])
@@ -38,6 +63,18 @@ const Home = () => {
         <Layout>
             <h1>Bienvenido a nuestra tienda de productos artesanales</h1>
             <p>Descubrí nuestra selección exclusiva de productos únicos hechos a mano. Calidad y diseño en cada detalle.</p>
+
+            <div className="search-container">
+                <input
+                    type="text"
+                    placeholder="Buscar producto por nombre"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="search-input"
+                />
+                <button onClick={handleSearch} className="search-button">Buscar</button>
+            </div>
+
             <section>
                 {
                     products.map(product => (
